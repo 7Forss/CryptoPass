@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoPassport</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        Telegram.WebApp.ready();
+
+        function addWallet() {
+            const walletAddress = document.getElementById('wallet_address').value;
+            const user = Telegram.WebApp.initDataUnsafe.user;
+            fetch('http://localhost:5000/add_wallet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    telegram_id: user.id,
+                    wallet_address: walletAddress
+                })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.status === 'success') {
+                      Telegram.WebApp.showAlert('Wallet added successfully');
+                  } else {
+                      Telegram.WebApp.showAlert('Error: ' + data.message);
+                  }
+              });
+        }
+
+        function getStats() {
+            const user = Telegram.WebApp.initDataUnsafe.user;
+            fetch(`http://localhost:5000/get_stats/${user.id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status !== 'error') {
+                        document.getElementById('balance').innerText = `Balance: ${data.balance} TON`;
+                        document.getElementById('transactions').innerText = `Transactions: ${data.transactions_count}`;
+                        document.getElementById('total_received').innerText = `Total Received: ${data.total_received} TON`;
+                        document.getElementById('total_sent').innerText = `Total Sent: ${data.total_sent} TON`;
+                    } else {
+                        Telegram.WebApp.showAlert('Error: ' + data.message);
+                    }
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>CryptoPassport</h1>
+    <input type="text" id="wallet_address" placeholder="Enter wallet address">
+    <button onclick="addWallet()">Add Wallet</button>
+    <button onclick="getStats()">Get Stats</button>
+    <div>
+        <p id="balance"></p>
+        <p id="transactions"></p>
+        <p id="total_received"></p>
+        <p id="total_sent"></p>
+    </div>
+</body>
+</html>
